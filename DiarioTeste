@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Diário de Catequese - Paróquia N. Sra. dos Remédios</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f2f2f2;
+    }
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 900px;
+      margin: 40px auto;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button + button {
+      margin-left: 10px;
+    }
+    table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    th,
+    td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+      font-size: 14px;
+    }
+    th {
+      background-color: #e6e6e6;
+    }
+    .presenca {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+    .presente {
+      background-color: lightgreen;
+    }
+    .faltou {
+      background-color: lightcoral;
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Diário de Catequese<br>Paróquia Nossa Senhora dos Remédios - Diocese de Petrolina</h1>
+
+    <label for="tipo">Tipo de Catequese:</label>
+    <select id="tipo" onchange="verificarAlunos()">
+      <option>Pré-Catequese</option>
+      <option>Eucaristia I</option>
+      <option>Eucaristia II</option>
+      <option>Perseverança</option>
+      <option>Crisma Jovem</option>
+      <option>Crisma Adulta</option>
+      <option>Adulto I</option>
+      <option>Adulto II</option>
+    </select>
+
+    <label for="responsavel">Responsável:</label>
+    <input type="text" id="responsavel" oninput="verificarAlunos()" />
+
+    <label for="auxiliares">Auxiliar(es):</label>
+    <input type="text" id="auxiliares" />
+
+    <label for="leitura">Leitura do Dia (Ex: Js 6, 1-20):</label>
+    <input type="text" id="leitura" />
+
+    <label for="tema">Tema da Aula:</label>
+    <input type="text" id="tema" />
+
+    <label for="data">Data:</label>
+    <input type="date" id="data" />
+
+    <h3>Frequência</h3>
+    <table id="frequencia">
+      <thead>
+        <tr>
+          <th>Nº</th>
+          <th>Nome</th>
+          <th>Presença</th>
+          <th>Justificativa</th>
+          <th>Observações</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <label for="conteudo">Conteúdo Trabalhado:</label>
+    <textarea id="conteudo" rows="5"></textarea>
+
+    <button onclick="gerarPDF()">Gerar PDF</button>
+    <button onclick="limparSelecao()">Limpar Seleção</button>
+  </div>
+
+  <script>
+    const alunosPorCatequese = {
+      "Crisma Jovem": [
+        "Adila Lavinia da Costa Ferreira",
+        "Adrielly Alves Costa",
+        "Adrielly de Souza Vieira",
+        "Agnys de Souza Cruz",
+        "Ana Cecília da Conceição Macedo",
+        "Ana Soraia de Carvalho Pereira",
+        "Anderson Rodrigues de Souza",
+        "Bábara Cecília Ferreira Gomes",
+        "Eloá Carvalho Brito",
+        "Eloá de Souza Gonçalves",
+        "Eloisa de Souza Gonçalves",
+        "Felipe Claudio Jacinto Pereira",
+        "Gabrielly Santos Ribeiro",
+        "Gabriely da Silva Argolo",
+        "Heloiza Barbosa de Carvalho",
+        "Henrique Lima Ferreira",
+        "Isabella da Costa Rodrigues",
+        "João Pedro R. de de Souza",
+        "Layla Silva Barbosa",
+        "Luan José de Alencar Macedo",
+        "Luiz Eduardo da Costa Xavier",
+        "Marcos Felipe Lima Souza",
+        "Maria Cecília Rodrigues de Souza",
+        "Maria Eduarda Coelho da Luz",
+        "Mayane Reis Rodrigues",
+        "Pedro Henrique de Souza Costa",
+        "Roberta de Souza Rodrigues",
+        "Samara Santos Pereira",
+        "Sarah Emanuelly Barros Rodrigues",
+        "Sarah Emily da Silva Costa",
+        "Victor Gabriel de Lima Rumeu",
+        "William Coelho de Souza",
+        "William dos Santos Carvalho"
+      ],
+      "Eucaristia I": [
+        "Alahna Monielen B. de Souza",
+        "Ariany Ferreira Costa",
+        "Ewerton Hyan S. Lima",
+        "Iasmin Melo Castro",
+        "Isabelle S. de Carvalho",
+        "Kauã de S. Gomes",
+        "Lorena C. Silva",
+        "Luna Beatriz P. de Sá",
+        "Lara Vitória S. Souza",
+        "Maria Júlia C. Do Vale",
+        "Manuela S. Machado",
+        "Mayra Suelen S. de Souza",
+        "Ryan Felipe Viana",
+        "Sérgio Otávio Feitosa Macedo",
+        "Suelen Macedo Carvalho",
+        "Sandra Michely da Silva Pereira",
+        "Thaisla de Souza Carvalho"
+      ],
+      "Eucaristia II": [
+        "Breno Rafael Pereira Carvalho",
+        "Elenice de Souza Santos",
+        "Francisco Emanuel Silva de Costa",
+        "Gabriela Souza de Araújo",
+        "Isabele Santos",
+        "Jailan Pereira da Silva",
+        "João Vitor Cordeiro luz",
+        "Laís Amélia Lins Pessoa",
+        "Lauana Siqueira Lima",
+        "Maria Eduarda Souza de Araújo",
+        "Marianne Macedo luz",
+        "Noemy Lopes da Mata",
+        "Pedro Pessoa da Silva",
+        "Pedro Rafael Rodrigues Macedo",
+        "Rafael Macedo luz",
+        "Ryan Silva Coelho",
+        "Samilly da Costa Macedo",
+        "Sofia Nayany de Souza Rodrigues",
+        "Vinicius Araújo da Silva",
+        "Vivian dos Santos Lopes"
+      ]
+    };
+
+    function verificarAlunos() {
+      const responsavel = document.getElementById("responsavel").value;
+      const tipo = document.getElementById("tipo").value;
+
+      const frequenciaBody = document.querySelector("#frequencia tbody");
+      frequenciaBody.innerHTML = ""; // Limpa a tabela anterior
+
+      if (responsavel === "Erisvaldo de Souza Alencar" && tipo === "Crisma Jovem") {
+        alunosPorCatequese["Crisma Jovem"].forEach((aluno, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${aluno}</td>
+            <td>
+              <input type="checkbox" class="presenca" onchange="atualizarLinha(this)" checked />
+            </td>
+            <td><input type="text" class="justificativa" /></td>
+            <td><input type="text" class="observacoes" /></td>
+          `;
+          frequenciaBody.appendChild(row);
+          atualizarLinha(row.querySelector('.presenca'));
+        });
+      } else if ((responsavel === "Maria Elena" || responsavel === "Maria Elena Viana Barbosa") && tipo === "Eucaristia I") {
+        alunosPorCatequese["Eucaristia I"].forEach((aluno, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${aluno}</td>
+            <td>
+              <input type="checkbox" class="presenca" onchange="atualizarLinha(this)" checked />
+            </td>
+            <td><input type="text" class="justificativa" /></td>
+            <td><input type="text" class="observacoes" /></td>
+          `;
+          frequenciaBody.appendChild(row);
+          atualizarLinha(row.querySelector('.presenca'));
+        });
+      } else if (responsavel === "Mayane da Silva Lima" && tipo === "Eucaristia II") {
+        alunosPorCatequese["Eucaristia II"].forEach((aluno, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${aluno}</td>
+            <td>
+              <input type="checkbox" class="presenca" onchange="atualizarLinha(this)" checked />
+            </td>
+            <td><input type="text" class="justificativa" /></td>
+            <td><input type="text" class="observacoes" /></td>
+          `;
+          frequenciaBody.appendChild(row);
+          atualizarLinha(row.querySelector('.presenca'));
+        });
+      }
+    }
+
+    function atualizarLinha(checkbox) {
+      const row = checkbox.closest("tr");
+      if (checkbox.checked) {
+        row.classList.remove("faltou");
+        row.classList.add("presente");
+      } else {
+        row.classList.remove("presente");
+        row.classList.add("faltou");
+      }
+    }
+
+    async function gerarPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit: "mm", format: "a4" });
+
+      const tipo = document.getElementById("tipo").value;
+      const responsavel = document.getElementById("responsavel").value;
+      const auxiliares = document.getElementById("auxiliares").value;
+      const leitura = document.getElementById("leitura").value;
+      const tema = document.getElementById("tema").value;
+      const data = document.getElementById("data").value;
+      const conteudo = document.getElementById("conteudo").value;
+      const rows = document.querySelectorAll("#frequencia tbody tr");
+
+      const marginLeft = 15;
+      const marginRight = 15;
+      let y = 20;
+
+      // Cabeçalho
+      doc.setFontSize(14);
+      doc.setFont(undefined, "bold");
+      doc.text("Diário de Catequese", marginLeft, y);
+      y += 7;
+      
+      doc.setFontSize(12);
+      doc.text("Paróquia Nossa Senhora dos Remédios - Diocese de Petrolina", marginLeft, y);
+      y += 10;
+
+      doc.setDrawColor(0);
+      doc.setLineWidth(0.5);
+      doc.line(marginLeft, y, 210 - marginRight, y);
+      y += 10;
+
+      // Informações básicas
+      doc.setFontSize(11);
+      doc.setFont(undefined, "bold");
+      doc.text("Tipo de Catequese:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(tipo, marginLeft + 40, y);
+      y += 7;
+
+      doc.setFont(undefined, "bold");
+      doc.text("Responsável:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(responsavel, marginLeft + 40, y);
+      y += 7;
+
+      if (auxiliares) {
+        doc.setFont(undefined, "bold");
+        doc.text("Auxiliares:", marginLeft, y);
+        doc.setFont(undefined, "normal");
+        doc.text(auxiliares, marginLeft + 40, y);
+        y += 7;
+      }
+
+      doc.setFont(undefined, "bold");
+      doc.text("Data:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(formatarData(data), marginLeft + 40, y);
+      y += 7;
+
+      doc.setFont(undefined, "bold");
+      doc.text("Leitura do Dia:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(leitura, marginLeft + 40, y);
+      y += 7;
+
+      doc.setFont(undefined, "bold");
+      doc.text("Tema da Aula:", marginLeft, y);
+      doc.setFont(undefined, "normal");
+      doc.text(tema, marginLeft + 40, y);
+      y += 10;
+
+      // Conteúdo trabalhado
+      doc.setFont(undefined, "bold");
+      doc.text("Conteúdo Trabalhado:", marginLeft, y);
+      y += 7;
+      
+      doc.setFont(undefined, "normal");
+      const conteudoLines = doc.splitTextToSize(conteudo, 180);
+      conteudoLines.forEach(line => {
+        doc.text(line, marginLeft, y);
+        y += 7;
+      });
+      y += 10;
+
+      // Tabela de frequência
+      doc.setFont(undefined, "bold");
+      doc.text("Frequência dos Alunos:", marginLeft, y);
+      y += 7;
+
+      const tableData = [];
+      rows.forEach((row, index) => {
+        const nome = row.cells[1].innerText;
+        const presente = row.cells[2].querySelector(".presenca").checked;
+        const justificativa = row.cells[3].querySelector(".justificativa").value;
+        const observacao = row.cells[4].querySelector(".observacoes").value;
+
+        tableData.push({
+          numero: index + 1,
+          nome: nome,
+          presenca: presente ? "Presente" : "Faltou",
+          justificativa: justificativa || "-",
+          observacao: observacao || "-",
+          fillColor: presente ? [200, 255, 200] : [255, 200, 200]
+        });
+      });
+
+      doc.autoTable({
+        startY: y,
+        head: [["Nº", "Nome", "Presença", "Justificativa", "Observações"]],
+        body: tableData.map(item => [
+          item.numero,
+          item.nome,
+          { content: item.presenca, styles: { fillColor: item.fillColor } },
+          item.justificativa,
+          item.observacao
+        ]),
+        margin: { left: marginLeft, right: marginRight },
+        headStyles: {
+          fillColor: [100, 100, 100],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold'
+        },
+        alternateRowStyles: {
+          fillColor: [245, 245, 245]
+        },
+        columnStyles: {
+          0: { cellWidth: 10 }, // Nº
+          1: { cellWidth: 'auto' }, // Nome
+          2: { cellWidth: 20 }, // Presença
+          3: { cellWidth: 'auto' }, // Justificativa
+          4: { cellWidth: 'auto' } // Observações
+        },
+        styles: {
+          fontSize: 9,
+          cellPadding: 3,
+          overflow: 'linebreak'
+        },
+        didDrawPage: function (data) {
+          // Footer
+          doc.setFontSize(10);
+          doc.setTextColor(100);
+          doc.text(
+            `Gerado em ${new Date().toLocaleDateString()}`,
+            data.settings.margin.left,
+            doc.internal.pageSize.height - 10
+          );
+        }
+      });
+
+      doc.save(`Diario_Catequese_${tipo.replace(/\s+/g, '_')}_${formatarData(data).replace(/\//g, '-')}.pdf`);
+    }
+
+    function formatarData(dataString) {
+      if (!dataString) return "";
+      const data = new Date(dataString);
+      return data.toLocaleDateString('pt-BR');
+    }
+
+    function limparSelecao() {
+      document.getElementById("responsavel").value = "";
+      document.getElementById("auxiliares").value = "";
+      document.getElementById("leitura").value = "";
+      document.getElementById("tema").value = "";
+      document.getElementById("data").value = "";
+      document.getElementById("conteudo").value = "";
+      const frequenciaBody = document.querySelector("#frequencia tbody");
+      frequenciaBody.innerHTML = "";
+    }
+  </script>
+</body>
+</html>
